@@ -4,15 +4,14 @@ var bookmarkUrlInput= document.getElementById('bookmarkURL');
 allBookMarks = [];
 
     var markNameRegex = /^[\w\d]{3,20}$/i ;
-    var markUrlRegex = /[\w\d]{3,}.com$/i ;
+    var markUrlRegex = /^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w-]*)*$/i ;
 
 (function() {
     if ( localStorage.getItem('allBookmarks') != null ){
         allBookMarks = JSON.parse(localStorage.getItem('allBookmarks'));
     }
-    displayAllBookmarks();
+    displayAllBookmarks(allBookMarks);
     })();
-
 
 function addToBookmark (){
     var bookmark = {
@@ -22,7 +21,7 @@ function addToBookmark (){
     if(validateIpnut(markNameRegex,bookmark.siteName,"Site name must contain at least 3 characters") && validateIpnut(markUrlRegex,bookmark.siteUrl,"Site URL must be a valid one")){
     bookmark.siteUrl = urlCutString(bookmark.siteUrl);
     allBookMarks.push(bookmark);
-    displayAllBookmarks ()
+    displayAllBookmarks (allBookMarks)
     localStorage.setItem('allBookmarks',JSON.stringify(allBookMarks))   
     // console.log(displayAllBookmarks ());
     clearForm();
@@ -30,22 +29,20 @@ function addToBookmark (){
     
 }
 
-
-
 function clearForm (){
     bookmarkNameInput.value = "";
     bookmarkUrlInput.value = "";
 }
 
-function displayAllBookmarks (){
+function displayAllBookmarks (spicefiedBookmark){
     var StringContainer = ''
-    for (i=0 ; i< allBookMarks.length ; i++){
+    for (i=0 ; i< spicefiedBookmark.length ; i++){
          StringContainer += `
          <tr>
             <td>${i+1}</td>
-            <td>${allBookMarks[i].siteName}</td>
+            <td>${spicefiedBookmark[i].siteName}</td>
             <td>
-              <a target="_blank" href="https://www.${allBookMarks[i].siteUrl}">
+              <a target="_blank" href="https://www.${spicefiedBookmark[i].siteUrl}">
                 <button onclick="" class="btn btn-visit">
                 <i class="fa-solid fa-eye pe-2"></i>
                 <span>Visit</span>
@@ -53,13 +50,13 @@ function displayAllBookmarks (){
               </a>
             </td>
             <td>
-              <button onclick="deleteBookMark(${i})" class="btn btn-delete pe-2">
+              <button onclick="deleteBookMark(${spicefiedBookmark[i].oldIndex == undefined ? i:spicefiedBookmark[i].oldIndex})" class="btn btn-delete pe-2">
                 <i class="fa-solid fa-trash-can"></i>
                 <span>Delete</span>
               </button>
             </td>
             <td>
-              <button onclick="editeBookmark(${i})" class="btn"><i class="fa-regular fa-pen-to-square"></i></button>
+              <button onclick="editeBookmark(${spicefiedBookmark[i].oldIndex == undefined ? i:spicefiedBookmark[i].oldIndex})" class="btn"><i class="fa-regular fa-pen-to-square"></i></button>
             </td>
           </tr>
         `
@@ -70,7 +67,7 @@ function displayAllBookmarks (){
 function deleteBookMark(indx){
     allBookMarks.splice(indx,1);
     localStorage.setItem('allBookmarks',JSON.stringify(allBookMarks))   
-    displayAllBookmarks();
+    displayAllBookmarks(allBookMarks);
 }
 
 function editeBookmark(indx){
@@ -101,40 +98,19 @@ function updateBookmark(indx){
     `
     ;
     localStorage.setItem('allBookmarks',JSON.stringify(allBookMarks))   
-    displayAllBookmarks();
+    displayAllBookmarks(allBookMarks);
 }
 
 function searchElemnt(term){
-        var StringContainer = ''
-        for(i=0;i<allBookMarks.length;i++){
-        if(allBookMarks[i].siteName.toLowerCase().includes(term.toLowerCase())){
-        
-          StringContainer += `
-         <tr>
-            <td>${i+1}</td>
-            <td>${allBookMarks[i].siteName}</td>
-            <td>
-              <a target="_blank" href="https://${allBookMarks[i].siteUrl}">
-                <button onclick="" class="btn btn-visit">
-                <i class="fa-solid fa-eye pe-2"></i>
-                <span>Visit</span>
-                </button>
-              </a>
-            </td>
-            <td>
-              <button onclick="deleteBookMark(${i})" class="btn btn-delete pe-2">
-                <i class="fa-solid fa-trash-can"></i>
-                <span>Delete</span>
-              </button>
-            </td>
-            <td>
-              <button onclick="editeBookmark(${i})" class="btn"><i class="fa-regular fa-pen-to-square"></i></button>
-            </td>
-          </tr>
-        `
-        }
-        }
-    document.getElementById("tableContent").innerHTML= StringContainer;    
+  var foundedBookmarks = [];
+  for(i=0;i<allBookMarks.length;i++){
+    if(allBookMarks[i].siteName.toLowerCase().includes(term.toLowerCase())){
+      var newBookmark = allBookMarks[i];
+      newBookmark.oldIndex = i;
+      foundedBookmarks.push(newBookmark);
+    }
+  }
+  displayAllBookmarks(foundedBookmarks)
 }
 
 function validateIpnut(regex,element,errorMessage){
